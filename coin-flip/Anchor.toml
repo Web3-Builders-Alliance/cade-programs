@@ -1,0 +1,16 @@
+[features]
+seeds = false
+[programs.localnet]
+coin_flip = "5K1YZoXccen2BZ2end3miHrGSJYTWBQfkFa1gd3SaTG6"
+[programs.devnet]
+coin_flip = "5K1YZoXccen2BZ2end3miHrGSJYTWBQfkFa1gd3SaTG6"
+
+[registry]
+url = "https://anchor.projectserum.com"
+
+[provider]
+cluster = "localnet"
+wallet = "/Users/natalieyeo/.config/solana/id.json"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/coin-flip.ts"
