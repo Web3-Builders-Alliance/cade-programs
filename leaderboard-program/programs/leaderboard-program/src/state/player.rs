@@ -4,7 +4,6 @@ use anchor_lang::prelude::*;
 pub struct Player {
     pub name: String,
     pub score: String,
-    pub game_id: AvailableGames,
     pub game_ref: Game,
 }
 
