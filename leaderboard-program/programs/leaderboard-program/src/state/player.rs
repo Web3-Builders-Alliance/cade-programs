@@ -10,17 +10,17 @@ pub struct Player {
 }
 
 impl Player {
-    // To be added
     pub fn new(name: String, score: u64, game_ref: Game) -> Result<Self> {
-        Ok(Self{
+        Ok(Self {
             name,
             score,
             game_ref
         })
     }
 
-    // To be added
-    pub fn update_score() -> Result<()> {
+    pub fn update_score(&mut self, new_score: u64) -> Result<()> {
+        self.score = new_score;
+
         Ok(())
     }
 }

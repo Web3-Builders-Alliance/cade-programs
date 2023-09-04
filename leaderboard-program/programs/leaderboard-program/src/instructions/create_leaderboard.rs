@@ -10,14 +10,14 @@ pub fn create_leaderboard(
     game_id: AvailableGames, 
     player: Player
 ) -> Result<()> {
-    ctx.accounts.game.set_inner(
+    ctx.accounts.leaderboard.set_inner(
         Leaderboard::new_with_game(
             game_id,
             player,
             *ctx.bumps
                 .get("leaderboard")
                 .expect("Failed to derive bump for `leaderboard`"),
-        )
+        )?
     );
 
     Ok(())
