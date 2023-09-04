@@ -7,6 +7,7 @@ pub struct Game {
     pub game_program: Pubkey,
     pub score: u64,
     pub timestamp: u64,
+    pub bump: u8,
 }
 
 impl Game {
@@ -24,15 +25,17 @@ impl Game {
         game_id: AvailableGames,
         game_program: Pubkey,
         score: u64, 
+        bump: u8,
     ) -> Result<Self> {
-        let current_time = Clock::get()?.unix_timestamp as u64;
+        let timestamp = Clock::get()?.unix_timestamp as u64;
 
         Ok(Self {
             player,
             game_id,
             game_program,
             score,
-            current_time
+            timestamp,
+            bump
         })
     }
 }
