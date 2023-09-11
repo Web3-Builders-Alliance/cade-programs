@@ -3,6 +3,8 @@ Code taken from: https://github.com/venture1981/coin-flip
 - added accumulator and some features
 - vercel app of github is broken due to the nextjs part, but rust code is ok
 
+run with anchor build, anchor deploy, anchor run test with solana test validator
+
 # CoinFlip (Solana)
 
 #### Demo

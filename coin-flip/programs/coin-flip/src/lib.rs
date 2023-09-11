@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use num_derive::*;
 
-declare_id!("5K1YZoXccen2BZ2end3miHrGSJYTWBQfkFa1gd3SaTG6");
+declare_id!("GWZnKS5wKpdqcgCgjQn9enk4YaRRAnLsFvVBLFYeXYP9");
 
 #[program]
 pub mod coin_flip {
@@ -22,7 +22,7 @@ pub mod coin_flip {
         coin_flip.bump = *ctx.bumps.get("coin_flip").unwrap();
         coin_flip.bet_amount = bet_amount;
         coin_flip.name = "CoinFlip".to_string();
-        coin_flip.player_scores = 0;
+        coin_flip.player_score = 0;
         coin_flip.accumulator = 0;
         coin_flip.reset_accumulator = false;
 
@@ -66,7 +66,11 @@ pub mod coin_flip {
             ],
         )?;
 
-        let total_bet = coin_flip.bet_amount * 2;
+        let mut total_bet = coin_flip.bet_amount * 2;
+
+        if coin_flip.reset_accumulator {
+            total_bet = total_bet * coin_flip.accumulator;
+        }
 
         let winner = coin_flip.play(player_seed, player_side);
 
@@ -83,11 +87,13 @@ pub mod coin_flip {
         }
 
         if winner == *ctx.accounts.vendor.key {
-            coin_flip.player_scores += total_bet;
+            coin_flip.player_score += total_bet;
             coin_flip.accumulator += 1;
+            coin_flip.reset_accumulator = true;
         } else {
-            coin_flip.player_scores = 0;
-            coin_flip.accumulator += 1;
+            coin_flip.player_score = 0;
+            coin_flip.reset_accumulator = false;
+            coin_flip.accumulator += 0;
         }
 
         Ok(())
@@ -104,7 +110,7 @@ pub struct Setup<'info> {
     #[account(
         init, 
         payer = vendor, 
-        space = CoinFlip::LEN,
+        space = 250,//1024,//CoinFlip::LEN,
         seeds = [b"coin-flip", vendor.key().as_ref(), player.as_ref()], bump
     )]
     pub coin_flip: Account<'info, CoinFlip>,
@@ -150,9 +156,9 @@ pub struct CoinFlip {
     state: CoinFlipState,
     bet_amount: u64,
     bump: u8,
-    player_scores: u64,
+    player_score: u64,
     name: String,
-    accumulator: i64,
+    accumulator: u64,
     reset_accumulator: bool,
 }
 
@@ -177,7 +183,7 @@ pub enum Side {
 }
 
 impl CoinFlip {
-    const LEN: usize = 64 + 8 + 33 + 8 + 8 + 8;
+    //const LEN: usize = 64 + 8 + 33 + 8 + 8 + 8;
 
     fn flip_side(&self, flip_number: i64) -> Side {
         if flip_number == 0 {
