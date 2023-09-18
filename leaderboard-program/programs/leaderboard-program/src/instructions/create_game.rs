@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::state::{game::*, player::*};
+use crate::state::game::*;
 
 // Creates an instance of "Game"
 // ** This instruction should be called via CPI from

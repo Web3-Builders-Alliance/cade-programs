@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{state::{game::*, leaderboard::*}, player, Player};
+use crate::{state::{game::*, leaderboard::*}, Player};
 
 // Create an instance of "Leaderboard"
 // ** This instruction should be called via CPI from
