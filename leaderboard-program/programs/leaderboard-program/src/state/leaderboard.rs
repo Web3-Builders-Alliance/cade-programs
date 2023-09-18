@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::state::{game::*, player::*};
+use crate::{state::{game::*, player::*}, error::CadeError};
 
 #[account]
 pub struct Leaderboard {
@@ -41,7 +41,23 @@ impl Leaderboard {
         // 4. If a position is returned, push to vec at the returned position
         // *** The "players" field could also be an array of length 10 with sample scores
         // *** However, I will avoid this for now, as we don't have enough information about the games
-        self.players.push(player);
+        let mut position_to_insert = None;
+        for (i, existing_player) in self.players.iter().enumerate() {
+            if player.score > existing_player.score {
+                position_to_insert = Some(i);
+                break;
+            }
+        }
+
+        // If player.score is less than all existing scores, return early.
+        if position_to_insert.is_none() {
+            return Err(CadeError::ScoreTooLow.into());
+        }
+
+        // Step 4: Insert the player at the found position
+        if let Some(pos) = position_to_insert {
+            self.players.insert(pos, player);
+        }
 
         Ok(())
     }
