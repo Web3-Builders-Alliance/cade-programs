@@ -1,11 +1,12 @@
 use anchor_lang::prelude::*;
 
-declare_id!("CdP3pznpbANuhWGm2a9taBw53jggP6awRnPQZvCESRdW");
+declare_id!("7K6FXvYevVgGr5jnfa9nY57qbnY428XrRagrrRAiKpzv");
 
 #[program]
 pub mod dtt {
-    use super::*;
 
+    use super::*;
+    
     pub fn create_map(
         ctx: Context<CreateMap>,
         name: String,
@@ -27,42 +28,36 @@ pub mod dtt {
         game.player = *ctx.accounts.user.key;
         game.status = "created".to_string();
         game.points = 0;
-        for i in 0..60 {
-            game.map[i] = Element {
-                kind: map.board[i].kind.to_string(),
-                health: map.board[i].health,
-                dps: map.board[i].dps,
-            };
-        }
+        game.map = *map.to_account_info().key;
 
-        game.budget = map.budget;
         game.bump = *ctx.bumps.get("game").unwrap();
         Ok(())
     }
 
     pub fn deploy_units(ctx: Context<DeployUnits>, deploys: [Vec<String>; 6]) -> Result<()> {
         let game = &mut *ctx.accounts.game;
-        let units = [
-            Unit {
-                kind: "soldier".to_string(),
-                health: 100,
-                dps: 10,
-                cost: 10,
-            },
-            Unit {
-                kind: "tank".to_string(),
-                health: 200,
-                dps: 25,
-                cost: 20,
-            },
-            Unit {
-                kind: "plane".to_string(),
-                health: 50,
-                dps: 75,
-                cost: 50,
-            },
-        ];
-        let mut budget = game.budget;
+        let map = &mut ctx.accounts.map;
+        let units : [Unit;3] = [
+        Unit {
+            kind: "soldier".to_string(),
+            health: 100,
+            dps: 10,
+            cost: 10,
+        },
+        Unit {
+            kind: "tank".to_string(),
+            health: 200,
+            dps: 25,
+            cost: 20,
+        },
+        Unit {
+            kind: "plane".to_string(),
+            health: 50,
+            dps: 75,
+            cost: 50,
+        },
+    ];
+        let mut budget = map.budget;
         for deploy in deploys.iter() {
             let mut count = 0;
             for unit_to_deploy in deploy.iter() {
@@ -81,9 +76,51 @@ pub mod dtt {
                 budget -= count;
             }
         }
-        game.budget = budget;
+        game.points += budget;
         game.deploys = deploys;
+        game.status = "deployed".to_string();
+        Ok(())
+    }
 
+    pub fn resolve_game(ctx: Context<ResolveGame>) -> Result<()>{
+        let game = &mut *ctx.accounts.game;
+        let map = &mut ctx.accounts.map;
+        let units : [Unit;3] = [
+        Unit {
+            kind: "soldier".to_string(),
+            health: 100,
+            dps: 10,
+            cost: 10,
+        },
+        Unit {
+            kind: "tank".to_string(),
+            health: 200,
+            dps: 25,
+            cost: 20,
+        },
+        Unit {
+            kind: "plane".to_string(),
+            health: 50,
+            dps: 75,
+            cost: 50,
+        },
+    ];
+        let mut win= false;
+        let mut points = game.points;
+        for i in 0 as u8 .. 6 as u8 {
+            let elements_in_line = map.board.iter().filter(|element| element.position / i == 0);
+            let attakers_dps = game.deploys[i as usize].iter().fold(0, |acc, unit| acc + units.iter().find(|u| u.kind == *unit).unwrap().dps as u64);
+            let attakers_health = game.deploys[i as usize].iter().fold(0, |acc, unit| acc + units.iter().find(|u| u.kind == *unit).unwrap().health as u64);
+            let line_damage = elements_in_line.fold(0, |acc, element| acc + ((element.dps*element.health) as u64 / attakers_dps));
+            if attakers_health > line_damage {
+                win = true;
+                points += map.board.iter().filter(|element| element.position / i == 0).fold(0, |acc, element| acc + element.health as u64);
+            } else {
+                points += attakers_dps * attakers_health / line_damage;
+            }
+        }
+        game.points = if win {points + 100 } else {points};
+        game.status = "resolved".to_string();
         Ok(())
     }
 }
@@ -119,22 +156,34 @@ pub struct CreateGame<'info> {
 }
 
 #[derive(Accounts)]
-pub struct DeployUnits<'info> {
-    #[account(mut)]
+pub struct ResolveGame<'info> {
+    pub map: Account<'info, Map>,
+    #[account(
+        mut
+    )]
     pub game: Account<'info, Game>,
     #[account(mut)]
     pub user: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
 
+#[derive(Accounts)]
+pub struct DeployUnits<'info> {
+    #[account(mut)]
+    pub game: Account<'info, Game>,
+    #[account(mut)]
+    pub user: Signer<'info>,
+    pub map: Account<'info, Map>,
+    pub system_program: Program<'info, System>,
+}
+
 #[account]
 pub struct Game {
     pub player: Pubkey,
-    pub map: Vec<Element>,
+    pub map: Pubkey,
     pub deploys: [Vec<String>; 6],
     pub points: u64,
     pub status: String,
-    pub budget: u64,
     pub bump: u8,
 }
 
@@ -152,6 +201,7 @@ pub struct Element {
     pub kind: String,
     pub health: u8,
     pub dps: u8,
+    pub position: u8,
 }
 
 #[account]

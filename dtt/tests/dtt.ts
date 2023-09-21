@@ -8,7 +8,7 @@ describe("Dtt", () => {
   const program = anchor.workspace.Dtt as Program<Dtt>;
 
 
-  const name = "test2";
+  const name = "teeest2";
   const [mapPDA] = web3.PublicKey.findProgramAddressSync(
     [Buffer.from(name)],
     program.programId,
