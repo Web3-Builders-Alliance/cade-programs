@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("7K6FXvYevVgGr5jnfa9nY57qbnY428XrRagrrRAiKpzv");
+declare_id!("F18piyUM9ccShzRZMG8y6TmQT8YttYB5mPW6WY2LyMkH");
 
 #[program]
 pub mod dtt {
@@ -30,7 +30,6 @@ pub mod dtt {
         game.points = 0;
         game.map = *map.to_account_info().key;
 
-        game.bump = *ctx.bumps.get("game").unwrap();
         Ok(())
     }
 
@@ -108,7 +107,8 @@ pub mod dtt {
         let mut win= false;
         let mut points = game.points;
         for i in 0 as u8 .. 6 as u8 {
-            let elements_in_line = map.board.iter().filter(|element| element.position / i == 0);
+            msg!("Line {}", i);
+            let elements_in_line = map.board.iter().filter(|element| element.position / 6 == i);
             let attakers_dps = game.deploys[i as usize].iter().fold(0, |acc, unit| acc + units.iter().find(|u| u.kind == *unit).unwrap().dps as u64);
             let attakers_health = game.deploys[i as usize].iter().fold(0, |acc, unit| acc + units.iter().find(|u| u.kind == *unit).unwrap().health as u64);
             let line_damage = elements_in_line.fold(0, |acc, element| acc + ((element.dps*element.health) as u64 / attakers_dps));
@@ -147,11 +147,12 @@ pub struct CreateGame<'info> {
     #[account(
         init,
         payer = user,
-        space = 100,
+        space = 1000,
     )]
     pub game: Account<'info, Game>,
     #[account(mut)]
-    pub user: Signer<'info>,
+    /// CHECK: 
+    pub user: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -184,7 +185,6 @@ pub struct Game {
     pub deploys: [Vec<String>; 6],
     pub points: u64,
     pub status: String,
-    pub bump: u8,
 }
 
 #[account]
