@@ -121,6 +121,9 @@ pub mod dtt {
         }
         game.points = if win {points + 100 } else {points};
         game.status = "resolved".to_string();
+
+        //Call to Leaderboard with game.points
+        
         Ok(())
     }
 }
