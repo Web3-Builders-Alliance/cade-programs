@@ -58,6 +58,10 @@ pub mod four_in_line {
                 }
             );
             game.status = (*status).to_string();
+
+            //CALL to leaderboard
+            // posible way to assign points: ROWS * CELLS_PER_ROW - game.turn
+            
         } else if game.turn == (ROWS * CELLS_PER_ROW) as u8 - 1 {
             game.status = "TIE".to_string();
         } else {
