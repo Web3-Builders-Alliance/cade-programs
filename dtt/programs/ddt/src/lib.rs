@@ -26,7 +26,6 @@ pub mod dtt {
         let game = &mut ctx.accounts.game;
         let map = &mut ctx.accounts.map;
         game.player = *ctx.accounts.user.key;
-        game.status = "created".to_string();
         game.points = 0;
         game.map = *map.to_account_info().key;
 
@@ -75,13 +74,6 @@ pub mod dtt {
                 budget -= count;
             }
         }
-        game.points += budget;
-        game.deploys = deploys;
-        game.status = "deployed".to_string();
-        Ok(())
-    }
-
-    pub fn resolve_game(ctx: Context<ResolveGame>) -> Result<()>{
         let game = &mut *ctx.accounts.game;
         let map = &mut ctx.accounts.map;
         let units : [Unit;3] = [
@@ -105,7 +97,7 @@ pub mod dtt {
         },
     ];
         let mut win= false;
-        let mut points = game.points;
+        let mut points = budget;
         for i in 0 as u8 .. 6 as u8 {
             msg!("Line {}", i);
             let elements_in_line = map.board.iter().filter(|element| element.position / 6 == i);
@@ -120,7 +112,7 @@ pub mod dtt {
             }
         }
         game.points = if win {points + 100 } else {points};
-        game.status = "resolved".to_string();
+        game.deploys = deploys;
 
         //Call to Leaderboard with game.points
         
@@ -159,17 +151,6 @@ pub struct CreateGame<'info> {
     pub system_program: Program<'info, System>,
 }
 
-#[derive(Accounts)]
-pub struct ResolveGame<'info> {
-    pub map: Account<'info, Map>,
-    #[account(
-        mut
-    )]
-    pub game: Account<'info, Game>,
-    #[account(mut)]
-    pub user: Signer<'info>,
-    pub system_program: Program<'info, System>,
-}
 
 #[derive(Accounts)]
 pub struct DeployUnits<'info> {
@@ -187,7 +168,6 @@ pub struct Game {
     pub map: Pubkey,
     pub deploys: [Vec<String>; 6],
     pub points: u64,
-    pub status: String,
 }
 
 #[account]
