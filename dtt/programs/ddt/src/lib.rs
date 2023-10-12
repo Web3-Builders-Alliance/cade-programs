@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("9fcHjpM8jrohJRJUMXXGvR7UwEma9ysF8r87eqHEdFhV");
+declare_id!("8co2yTf2PEXtsNpcBACJgNQHPorUpe2FYHLKHLQphwfH");
 
 #[program]
 pub mod dtt {
@@ -93,9 +93,7 @@ pub mod dtt {
 
         //Call to Leaderboard with game.points
         
-        emit!(GameUpdated {
-            game: game.clone(),
-        });
+  
         Ok(())
     }
 }
@@ -180,14 +178,4 @@ pub enum ErrorCode {
     CostExceedsBudget,
     #[msg("Tryied to Deploy an invalid Unit")]
     InvalidUnit,
-}
-
-#[event]
-pub struct MapCreated {
-    map: Map,
-}
-
-#[event]
-pub struct GameUpdated {
-    pub game: Game,
 }
