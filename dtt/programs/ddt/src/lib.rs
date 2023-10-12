@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("F18piyUM9ccShzRZMG8y6TmQT8YttYB5mPW6WY2LyMkH");
+declare_id!("9fcHjpM8jrohJRJUMXXGvR7UwEma9ysF8r87eqHEdFhV");
 
 #[program]
 pub mod dtt {
@@ -74,32 +74,9 @@ pub mod dtt {
                 budget -= count;
             }
         }
-        let game = &mut *ctx.accounts.game;
-        let map = &mut ctx.accounts.map;
-        let units : [Unit;3] = [
-        Unit {
-            kind: "soldier".to_string(),
-            health: 100,
-            dps: 10,
-            cost: 10,
-        },
-        Unit {
-            kind: "tank".to_string(),
-            health: 200,
-            dps: 25,
-            cost: 20,
-        },
-        Unit {
-            kind: "plane".to_string(),
-            health: 50,
-            dps: 75,
-            cost: 50,
-        },
-    ];
         let mut win= false;
         let mut points = budget;
         for i in 0 as u8 .. 6 as u8 {
-            msg!("Line {}", i);
             let elements_in_line = map.board.iter().filter(|element| element.position / 6 == i);
             let attakers_dps = game.deploys[i as usize].iter().fold(0, |acc, unit| acc + units.iter().find(|u| u.kind == *unit).unwrap().dps as u64);
             let attakers_health = game.deploys[i as usize].iter().fold(0, |acc, unit| acc + units.iter().find(|u| u.kind == *unit).unwrap().health as u64);
@@ -116,6 +93,9 @@ pub mod dtt {
 
         //Call to Leaderboard with game.points
         
+        emit!(GameUpdated {
+            game: game.clone(),
+        });
         Ok(())
     }
 }
@@ -150,7 +130,6 @@ pub struct CreateGame<'info> {
     pub user: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
-
 
 #[derive(Accounts)]
 pub struct DeployUnits<'info> {
@@ -201,4 +180,14 @@ pub enum ErrorCode {
     CostExceedsBudget,
     #[msg("Tryied to Deploy an invalid Unit")]
     InvalidUnit,
+}
+
+#[event]
+pub struct MapCreated {
+    map: Map,
+}
+
+#[event]
+pub struct GameUpdated {
+    pub game: Game,
 }
