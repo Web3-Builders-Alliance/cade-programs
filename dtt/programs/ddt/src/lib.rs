@@ -28,7 +28,10 @@ pub mod dtt {
         game.player = *ctx.accounts.user.key;
         game.points = 0;
         game.map = *map.to_account_info().key;
-
+        emit!(GameCreated {
+            player: *ctx.accounts.user.key,
+            pubkey: *ctx.accounts.game.to_account_info().key,
+        });
         Ok(())
     }
 
@@ -110,6 +113,11 @@ pub mod dtt {
         game.deploys = deploys;
 
         //Call to Leaderboard with game.points
+
+        emit!(GameUpdated {
+            points: game.points,
+            pubkey: *ctx.accounts.game.to_account_info().key,
+        });
 
         Ok(())
     }
@@ -195,4 +203,16 @@ pub enum ErrorCode {
     CostExceedsBudget,
     #[msg("Tryied to Deploy an invalid Unit")]
     InvalidUnit,
+}
+
+#[event]
+pub struct GameCreated {
+    player: Pubkey,
+    pubkey: Pubkey,
+}
+
+#[event]
+pub struct GameUpdated {
+    points: u64,
+    pubkey: Pubkey,
 }
