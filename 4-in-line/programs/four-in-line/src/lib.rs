@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use itertools::Itertools;
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("Ha6zWmPZUce5ZNJE2Ua9bMMCgDj6DS3dw7UuTHL7rms8");
 
 const ROWS: usize = 7;
 const CELLS_PER_ROW: usize = 7;
@@ -12,17 +12,15 @@ pub mod four_in_line {
 
     pub fn create_game(
         ctx: Context<CreateGame>,
-        name: String,
         players: Vec<Pubkey>,
         game_type: String,
     ) -> Result<()> {
         let game = &mut ctx.accounts.game;
         game.board = vec![Play::Empty; ROWS * CELLS_PER_ROW];
-        game.name = (*name).to_string();
         game.players = players;
         game.status = "PLAYING".to_string();
         game.game_type = (*game_type).to_string();
-        emit!(GameCreated { name, game_type });
+        emit!(GameCreated { pubkey: *ctx.accounts.game.to_account_info().key, game_type });
         Ok(())
     }
 
@@ -91,7 +89,7 @@ pub mod four_in_line {
             }
         }
         emit!(GameUpdated {
-            name: (*game.name).to_string(),
+            pubkey: *game.to_account_info().key,
             board: (*game.board).to_vec(),
             status: (*game.status).to_string()
         });
@@ -100,14 +98,11 @@ pub mod four_in_line {
 }
 
 #[derive(Accounts)]
-#[instruction(name: String)]
 pub struct CreateGame<'info> {
     #[account(
         init,
         payer = payer,
-        space = 900,
-        seeds = [b"game".as_ref(), name.as_ref()],
-        bump
+        space = 900
     )]
     pub game: Account<'info, Game>,
     /// CHECK:
@@ -128,7 +123,6 @@ pub struct Playing<'info> {
 
 #[account]
 pub struct Game {
-    pub name: String,
     pub game_type: String,
     pub board: Vec<Play>,
     pub players: Vec<Pubkey>,
@@ -155,13 +149,13 @@ pub enum ErrorCode {
 
 #[event]
 pub struct GameCreated {
-    name: String,
+    pubkey: Pubkey,
     game_type: String,
 }
 
 #[event]
 pub struct GameUpdated {
-    name: String,
+    pubkey: Pubkey,
     board: Vec<Play>,
     status: String,
 }
